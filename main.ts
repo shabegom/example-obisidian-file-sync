@@ -1,112 +1,85 @@
-import { App, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import Diff from "diff";
+import { App, Notice, Plugin } from "obsidian";
 
-interface MyPluginSettings {
-	mySetting: string;
-}
-
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
+const fileName = "test";
 
 export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+  async onload() {
+    console.log("loading plugin");
+    await processFiles(this.app);
+    //run the diffing every 10 seconds, in reality you'll want this to be much longer
+    this.registerInterval(
+      window.setInterval(() => {
+        console.log("running interval");
+        processFiles(this.app);
+      }, 10000)
+    );
+  }
 
-	async onload() {
-		console.log('loading plugin');
-
-		await this.loadSettings();
-
-		this.addRibbonIcon('dice', 'Sample Plugin', () => {
-			new Notice('This is a notice!');
-		});
-
-		this.addStatusBarItem().setText('Status Bar Text');
-
-		this.addCommand({
-			id: 'open-sample-modal',
-			name: 'Open Sample Modal',
-			// callback: () => {
-			// 	console.log('Simple Callback');
-			// },
-			checkCallback: (checking: boolean) => {
-				let leaf = this.app.workspace.activeLeaf;
-				if (leaf) {
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-					return true;
-				}
-				return false;
-			}
-		});
-
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		this.registerCodeMirror((cm: CodeMirror.Editor) => {
-			console.log('codemirror', cm);
-		});
-
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-	}
-
-	onunload() {
-		console.log('unloading plugin');
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+  onunload() {
+    console.log("unloading plugin");
+  }
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
-
-	onOpen() {
-		let {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		let {contentEl} = this;
-		contentEl.empty();
-	}
+// This function fetches a file from the Glitch Server
+async function fetchServerFile(fileName: string) {
+  return await fetch(
+    `https://example-obsidian-file-syncing.glitch.me/${fileName}.md`
+  )
+    .then(res => res.text())
+    .catch(() => {
+      new Notice(`couldn't find the server file`, 2000);
+      return "";
+    });
 }
 
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+// This function fetches the file on the disk
+async function fetchLocalFile(app: App, fileName: string) {
+  const files = app.vault.getFiles();
+  const match = files.filter(file => file.basename === fileName);
+  if (match[0]) {
+    return await app.vault.read(match[0]);
+  } else {
+    new Notice(`couldn't find the local file`, 2000);
+  }
+  return "";
+}
 
-	constructor(app: App, plugin: MyPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
+// This function runs a diff between the file on disk and the server file to see
+// if there are changes. If there are it returns true
+function diffFiles(localFile: string, serverFile: string) {
+  let diff = Diff.diffLines(localFile, serverFile);
+  if (diff.length > 1) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
-	display(): void {
-		let {containerEl} = this;
+// This function will replace the data of the localFile with the data in the server hosted file this has a lot of repition with fetchLocalFile, but is made it's own function for example purposes
+async function replaceLocalFile(
+  app: App,
+  fileName: string,
+  replaceWith: string
+) {
+  const files = app.vault.getFiles();
+  const match = files.filter(file => file.basename === fileName);
+  if (match[0]) {
+    return await app.vault.modify(match[0], replaceWith);
+  } else {
+    new Notice(`couldn't find the local file`, 2000);
+  }
+  return "";
+}
 
-		containerEl.empty();
-
-		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
-
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue('')
-				.onChange(async (value) => {
-					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
-	}
+// lets put all this together into a function that grabs the local and server file and if there are differences, replaces the local with the server
+async function processFiles(app: App) {
+  let serverFile = await fetchServerFile(fileName);
+  let localFile = await fetchLocalFile(app, fileName);
+  let initialDiff = diffFiles(localFile, serverFile);
+  if (initialDiff) {
+    await replaceLocalFile(app, fileName, serverFile);
+  } else {
+    new Notice("the files are the same!", 2000);
+  }
 }

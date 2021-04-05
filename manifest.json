@@ -1,10 +1,10 @@
 {
-	"id": "obsidian-sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.1",
-	"minAppVersion": "0.9.12",
-	"description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md/about",
-	"isDesktopOnly": false
+  "id": "example-obsidian-file-sync-plugin",
+  "name": "Example File Syncing Plugin",
+  "version": "1.0.1",
+  "minAppVersion": "0.9.12",
+  "description": "This is a example plugin for Obsidian. This plugin demonstrates a super naïve approach to syncing an obsidian file with a file on a server.",
+  "author": "shabegom",
+  "authorUrl": "https://shbgm.ca",
+  "isDesktopOnly": false
 }
