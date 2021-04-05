@@ -11,7 +11,8 @@ To install the example:
 2. run `npm run build`
 3. create a folder in `$YOUR_VAULT/.obsidian/plugins/` call is `example-file-sync` or whatever you'd like
 4. copy `main.js` and `manifest.json` into the created folder
-5. Enable the plugin in the Community Plugins settings
+5. add a file to your obsidian vault with the title 'test'
+6. Enable the plugin in the Community Plugins settings
 
 ### What this plugin does
 **Read `main.ts` before you do anything!!**
