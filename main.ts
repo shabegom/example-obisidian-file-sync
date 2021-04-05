@@ -2,6 +2,7 @@ import Diff from "diff";
 import { App, Notice, Plugin } from "obsidian";
 
 const fileName = "test";
+const glitchURI: "https://example-obsidian-file-syncing.glitch.me/";
 
 export default class MyPlugin extends Plugin {
   async onload() {
@@ -23,9 +24,7 @@ export default class MyPlugin extends Plugin {
 
 // This function fetches a file from the Glitch Server
 async function fetchServerFile(fileName: string) {
-  return await fetch(
-    `https://example-obsidian-file-syncing.glitch.me/${fileName}.md`
-  )
+  return await fetch(`${glitchURI}${fileName}.md`)
     .then(res => res.text())
     .catch(() => {
       new Notice(`couldn't find the server file`, 2000);
