@@ -33,3 +33,11 @@ If the two files are different, it replaces the contents of the local file with 
 1. You could make the sync bi-directional so that changes to the local file are pushed to the server.
 2. You could write to the server file from some kind of API and it would be synced to your local file.
 3. Honestly, this is just an idea! Use it to build any kind of connector to another REST API or whatevs.
+
+### b-b-b-bonus
+
+The Glitch server includes a GET endpoint that will append content to the 'test.md' file. This is an example of how you might write content to the file server-side which is then synced locally.
+
+example: https://example-obsidian-file-syncing.glitch.me/write?content=hello%20world
+
+I suggest reading up on REST API structure (normally this would be a POST request, but I'm using GET so it can easily be run in the browser.)
